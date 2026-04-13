@@ -138,6 +138,13 @@
 
 
 ## 🔥 近期更新
+- 【4-13】：
+  * Windows 原生部署（无需 Docker/WSL）：一键 `start.bat` 启动，`stop.bat` 停止
+  * PaddleOCR 本地 OCR 替代百度 OCR：无需 API Key，`OCR_PROVIDER=paddle` 即可使用；通过坐标聚类实现表格结构识别
+  * waitress 替代 Flask 开发服务器，消除生产环境警告
+  * 修复 PaddleOCR v3 `predict()` 返回格式适配（`rec_texts`/`rec_scores`/`rec_boxes` 并行数组）
+  * 修复 `use_angle_cls` 废弃警告（改用 `use_textline_orientation`）
+  * 提取 `_shrink_cells_to_avoid_overlap` 为模块级函数，消除跨类调用
 - 【2-9】：
   * 新功能
     * 支持在首页、大纲、描述卡片里面粘贴图片并立即识别，并提供更好的交互体验
