@@ -139,12 +139,9 @@
 
 ## 🔥 近期更新
 - 【4-13】：
-  * Windows 原生部署（无需 Docker/WSL）：一键 `start.bat` 启动，`stop.bat` 停止
-  * PaddleOCR 本地 OCR 替代百度 OCR：无需 API Key，`OCR_PROVIDER=paddle` 即可使用；通过坐标聚类实现表格结构识别
-  * waitress 替代 Flask 开发服务器，消除生产环境警告
-  * 修复 PaddleOCR v3 `predict()` 返回格式适配（`rec_texts`/`rec_scores`/`rec_boxes` 并行数组）
-  * 修复 `use_angle_cls` 废弃警告（改用 `use_textline_orientation`）
-  * 提取 `_shrink_cells_to_avoid_overlap` 为模块级函数，消除跨类调用
+  * **新增 Windows 原生部署**：无需 Docker/WSL，双击 `start.bat` 一键启动，`stop.bat` 停止服务
+  * **新增 PaddleOCR 本地 OCR**：无需百度 OCR API Key，默认使用 PaddleOCR（`OCR_PROVIDER=paddle`），也可通过 `OCR_PROVIDER=baidu` 切换回百度 OCR
+  * waitress 替代 Flask 开发服务器（Windows 原生部署），Docker 部署仍使用 Flask dev server
 - 【2-9】：
   * 新功能
     * 支持在首页、大纲、描述卡片里面粘贴图片并立即识别，并提供更好的交互体验
@@ -198,6 +195,69 @@
 [![通过雨云一键部署](https://rainyun-apps.cn-nb1.rains3.com/materials/deploy-on-rainyun-cn.svg)](https://app.rainyun.com/apps/rca/store/7549/anionex_)
 
 2. 敬请期待
+
+
+### Windows 原生部署🪟（无需 Docker）
+
+适用于 Windows 10/11，无需安装 Docker 或 WSL，双击即可启动。
+
+#### 环境要求
+- **Python 3.10+**（安装时勾选 "Add Python to PATH"）
+- **Node.js 18+**
+- 磁盘空间 ~2GB（含 PaddleOCR 模型）
+
+#### 快速启动
+
+1. **克隆代码仓库**
+```bash
+git clone https://github.com/GuofaHuang/banana-slides
+cd banana-slides
+```
+
+2. **配置环境变量**
+
+复制 `.env.example` 为 `.env`，填入 API 密钥：
+```bash
+copy .env.example .env
+```
+
+编辑 `.env`，至少配置以下项：
+```env
+AI_PROVIDER_FORMAT=gemini        # 或 openai / anthropic
+GOOGLE_API_KEY=your-api-key      # 或 OPENAI_API_KEY
+```
+
+3. **一键启动**
+
+双击 `start.bat`，脚本会自动：
+- 检测 Python / Node.js / uv
+- 安装前后端依赖
+- 后台启动后端（waitress 生产服务器）和前端
+- 自动打开浏览器访问 http://localhost:3000
+
+4. **停止服务**
+
+双击 `stop.bat`
+
+> **OCR 配置**：默认使用 PaddleOCR（本地运行，无需 API Key）。如需百度 OCR，在 `.env` 中设置 `OCR_PROVIDER=baidu` 并配置 `BAIDU_API_KEY`。
+
+<details>
+  <summary>📒 单独启动后端或前端</summary>
+
+**后端**（在 `backend/` 目录下）：
+```bash
+uv run alembic upgrade head && uv run python app.py
+```
+或双击 `backend/run.bat`
+
+**前端**（在 `frontend/` 目录下）：
+```bash
+npm install
+npm run dev
+```
+或双击 `frontend/start.bat`
+
+</details>
 
 
 ### 使用 Docker Compose🐳
@@ -265,7 +325,7 @@ MINIMAX_API_KEY=your-minimax-api-key          # MiniMax
 ...
 ```
 
-**使用新版可编辑导出配置方法，获得更好的可编辑导出效果**: 需在[百度智能云平台](https://console.bce.baidu.com/iam/#/iam/apikey/list)（点击此处进入）中获取API KEY，填写在.env文件中的BAIDU_API_KEY字段（有充足的免费使用额度）。详见https://github.com/Anionex/banana-slides/issues/121 中的说明
+**可编辑导出 OCR 配置**：默认使用 PaddleOCR（本地运行，无需 API Key）。如需更高精度，可在[百度智能云平台](https://console.bce.baidu.com/iam/#/iam/apikey/list)获取 API KEY，填写在 `.env` 的 `BAIDU_API_KEY` 字段，并设置 `OCR_PROVIDER=baidu`。详见 https://github.com/Anionex/banana-slides/issues/121
 
 
 <details>
@@ -368,6 +428,8 @@ docker compose up -d
 **注：感谢优秀开发者朋友 [@ShellMonster](https://github.com/ShellMonster/) 提供了[新人部署教程](https://github.com/ShellMonster/banana-slides/blob/docs-deploy-tutorial/docs/NEWBIE_DEPLOYMENT.md)，专为没有任何服务器部署经验的新手设计，可[点击链接](https://github.com/ShellMonster/banana-slides/blob/docs-deploy-tutorial/docs/NEWBIE_DEPLOYMENT.md)查看。**
 
 ### 从源码部署
+
+> **Windows 用户推荐**使用上方的「Windows 原生部署」方式（双击 `start.bat`），以下为手动部署步骤，适用于 Linux / macOS 或需要自定义配置的场景。
 
 #### 环境要求
 - Python 3.10 或更高版本
@@ -498,6 +560,8 @@ npm run dev
 - **AI能力**：Google Gemini API
 - **PPT处理**：python-pptx
 - **图片处理**：Pillow
+- **OCR**：PaddleOCR（本地，默认）/ 百度 OCR（可选）
+- **生产服务器**：waitress（Windows 原生部署）
 - **并发处理**：ThreadPoolExecutor
 - **跨域支持**：Flask-CORS
 
@@ -593,6 +657,8 @@ banana-slides/
 ├── pyproject.toml              # Python项目配置（uv管理）
 ├── uv.lock                     # uv依赖锁定文件
 ├── docker-compose.yml          # Docker Compose配置
+├── start.bat                   # Windows 一键启动脚本
+├── stop.bat                    # Windows 停止服务脚本
 ├── .env.example                 # 环境变量示例
 ├── LICENSE                     # 许可证
 └── README.md                   # 本文件
@@ -631,11 +697,15 @@ banana-slides/
     - 免费层级只支持文本生成，不支持图片生成。
 
 4. **生成内容时提示 503 错误或 Retry Error**
-    - 可以根据 README 中的命令查看 Docker 后端日志，定位 503 问题的详细报错，一般是模型配置不正确导致。
+    - 查看后端日志定位详细报错，一般是模型配置不正确导致。Docker 部署用 `docker logs banana-slides-backend`；Windows 原生部署查看后端终端窗口输出。
 
 5. **.env 中设置了 API Key 之后，为什么不生效？**
-    - 运行时编辑 `.env` 后需要重启 Docker 容器以应用更改。
+    - 运行时编辑 `.env` 后需要重启服务以应用更改（Docker：重启容器；Windows：运行 `stop.bat` 再 `start.bat`）。
     - 如果曾在网页设置页中配置参数，会覆盖 `.env` 中的参数，可通过"还原默认设置"恢复为 `.env` 设置。
+
+6. **PaddleOCR 和百度 OCR 怎么选？**
+    - 默认使用 PaddleOCR（本地运行，无需 API Key，免费无限制），对大多数场景够用。
+    - 如需更高精度，在 `.env` 中设置 `OCR_PROVIDER=baidu` 并配置 `BAIDU_API_KEY`。
 
 
 ## 🤝 贡献指南
